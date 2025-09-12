@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class FilterChipWidget extends StatelessWidget {
   final String label;
@@ -18,6 +19,16 @@ class FilterChipWidget extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
+      selectedColor: AppColors.primary.withOpacity(0.2),
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.primary : AppColors.textPrimary,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      checkmarkColor: AppColors.primary,
+      backgroundColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? AppColors.primary : AppColors.border,
+      ),
     );
   }
 }

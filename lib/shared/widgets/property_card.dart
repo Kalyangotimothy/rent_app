@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
 
 class PropertyCard extends StatelessWidget {
@@ -24,19 +23,9 @@ class PropertyCard extends StatelessWidget {
           // Property Image
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: CachedNetworkImage(
-              imageUrl: property['image'] ?? '',
+            child: Image.network(
+              property['image'] ?? '',
               fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: Colors.grey[200],
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.error),
-              ),
             ),
           ),
           
@@ -78,7 +67,7 @@ class PropertyCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '€${property['price']}/month',
+                      '\$${property['price']}/month',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

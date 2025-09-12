@@ -65,7 +65,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
+  
   assets:
-    - assets/images/
-    - assets/icons/
+    - assets/images/kampala1.jpg
+    - assets/images/kampala2.jpg
+    - assets/images/kampala3.jpg

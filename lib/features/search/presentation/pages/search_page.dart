@@ -11,6 +11,15 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  final List<String> _carouselImages = [
+    'assets/images/kampala1.jpg',
+    'assets/images/kampala2.jpg',
+    'assets/images/kampala3.jpg',
+  ];
+
   final TextEditingController _searchController = TextEditingController();
   final List<String> _selectedFilters = [];
 
@@ -28,8 +37,8 @@ class _SearchPageState extends State<SearchPage> {
     {
       'id': 1,
       'title': 'Modern 3-Bedroom Apartment',
-      'location': 'Mitte, Berlin',
-      'price': 1200,
+      'location': 'kitara-kanyanya',
+      'price': 200,
       'size': 85,
       'rooms': 3,
       'bathrooms': 2,
@@ -42,8 +51,8 @@ class _SearchPageState extends State<SearchPage> {
     {
       'id': 2,
       'title': 'Luxury Penthouse with Terrace',
-      'location': 'Prenzlauer Berg, Berlin',
-      'price': 2800,
+      'location': 'kyanja',
+      'price': 800,
       'size': 120,
       'rooms': 4,
       'bathrooms': 3,
@@ -56,7 +65,7 @@ class _SearchPageState extends State<SearchPage> {
     {
       'id': 3,
       'title': 'Cozy Studio in Historic Building',
-      'location': 'Kreuzberg, Berlin',
+      'location': 'Kisaasi',
       'price': 850,
       'size': 35,
       'rooms': 1,
@@ -70,105 +79,217 @@ class _SearchPageState extends State<SearchPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Start auto-scrolling after a delay
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _autoScroll();
+      }
+    });
+  }
+
+  void _autoScroll() {
+    if (!mounted) return;
+    
+    final nextPage = (_currentPage + 1) % _carouselImages.length;
+    _pageController.animateToPage(
+      nextPage,
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
+    ).then((_) {
+      if (mounted) {
+        Future.delayed(const Duration(seconds: 5), _autoScroll);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+  
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Header with gradient background
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: MediaQuery.of(context).size.height * 0.4, // Make height responsive
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary,
-                      AppColors.secondary,
-                      AppColors.accent,
-                    ],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Find Your Perfect Home',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
+              background: Stack(
+                fit: StackFit.expand, // Ensure stack fills available space
+                children: [
+                  PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    itemCount: _carouselImages.length,
+                    itemBuilder: (context, index) {
+                      return Hero(
+                        tag: 'carousel_${_carouselImages[index]}',
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Container(
+                              width: constraints.maxWidth,
+                              height: constraints.maxHeight,
+                              child: Image.asset(
+                                _carouselImages[index],
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print('Error loading image: $error');
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.image_not_supported,
+                                          size: 48,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Failed to load: ${_carouselImages[index]}',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
                         ),
-                        const SizedBox(height: 20),
-                        // Search bar
-                        Container(
+                      );
+                    },
+                  ),
+                  // Gradient overlay for better text visibility
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.7),
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.7),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Dot indicators
+                  Positioned(
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: _carouselImages.map((image) {
+                        int index = _carouselImages.indexOf(image);
+                        return Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            shape: BoxShape.circle,
+                            color: _currentPage == index
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.4),
                           ),
-                          child: TextField(
-                            controller: _searchController,
-                            decoration: InputDecoration(
-                              hintText: 'Enter location, property type, or keywords...',
-                              prefixIcon: const Icon(Icons.search, color: AppColors.textTertiary),
-                              suffixIcon: IconButton(
-                                icon: const Icon(Icons.tune, color: AppColors.primary),
-                                onPressed: () => _showFilters(context),
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  // Content (Search bar and filters)
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Find Your Perfect Home',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Search bar
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: 'Enter location, property type, or keywords...',
+                                prefixIcon: const Icon(Icons.search, color: AppColors.textTertiary),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.tune, color: AppColors.primary),
+                                  onPressed: () => _showFilters(context),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12, // Reduced padding
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Filter chips
-                        SizedBox(
-                          height: 36,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _filters.length,
-                            itemBuilder: (context, index) {
-                              final filter = _filters[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: FilterChipWidget(
-                                  label: filter,
-                                  isSelected: _selectedFilters.contains(filter),
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      if (selected) {
-                                        _selectedFilters.add(filter);
-                                      } else {
-                                        _selectedFilters.remove(filter);
-                                      }
-                                    });
-                                  },
-                                ),
-                              );
-                            },
+                          const SizedBox(height: 12), // Reduced spacing
+                          // Filter chips
+                          SizedBox(
+                            height: 40, // Increased height slightly
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _filters.length,
+                              itemBuilder: (context, index) {
+                                final filter = _filters[index];
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    right: 8,
+                                    bottom: index == _filters.length - 1 ? 8 : 0,
+                                  ),
+                                  child: FilterChipWidget(
+                                    label: filter,
+                                    isSelected: _selectedFilters.contains(filter),
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          _selectedFilters.add(filter);
+                                        } else {
+                                          _selectedFilters.remove(filter);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
